@@ -1,0 +1,20 @@
+# Swift Package Manager
+.build/
+*.resolved
+
+# Xcode
+*.xcodeproj/
+*.xcworkspace/
+xcuserdata/
+DerivedData/
+.swp
+
+# JetBrains / AppCode
+.idea/
+*.iml
+
+# Run configurations
+.run/
+
+# macOS
+.DS_Store

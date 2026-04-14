@@ -1,0 +1,186 @@
+import Foundation
+@preconcurrency import Citadel
+@preconcurrency import NIO
+import NIOSSH
+import Crypto
+import Logging
+
+public enum SSHConnectionError: Error {
+    case connectionFailed(String)
+    case authenticationFailed(String)
+    case unknownHost(String)
+    case timeout
+    case notConnected
+}
+
+public enum SSHAuthMethod: Sendable {
+    case password(SecureBytes)
+    case key(path: String, passphrase: SecureBytes?)
+}
+
+public actor SSHAdapter: RemoteConnection {
+    public let id: UUID = UUID()
+    public private(set) var state: ConnectionState = .disconnected
+
+    private let host: String
+    private let port: Int
+    private let username: String
+    private let authMethod: SSHAuthMethod
+    private let keepAliveInterval: Int
+
+    private var sshClient: SSHClient?
+
+    private var stateContinuation: AsyncStream<ConnectionState>.Continuation?
+    private var _stateStream: AsyncStream<ConnectionState>?
+    private var outputContinuation: AsyncStream<Data>.Continuation?
+    private var _outputStream: AsyncStream<Data>?
+
+    private let logger = Logger(label: "com.everyterm.ssh")
+
+    public init(
+        host: String,
+        port: Int,
+        username: String,
+        authMethod: SSHAuthMethod,
+        keepAliveInterval: Int = 60
+    ) {
+        self.host = host
+        self.port = port
+        self.username = username
+        self.authMethod = authMethod
+        self.keepAliveInterval = keepAliveInterval
+
+        let (stateStream, stateCont) = AsyncStream<ConnectionState>.makeStream()
+        self._stateStream = stateStream
+        self.stateContinuation = stateCont
+
+        let (outputStream, outputCont) = AsyncStream<Data>.makeStream()
+        self._outputStream = outputStream
+        self.outputContinuation = outputCont
+    }
+
+    public var stateStream: AsyncStream<ConnectionState> {
+        _stateStream!
+    }
+
+    public var outputStream: AsyncStream<Data> {
+        _outputStream!
+    }
+
+    public func connect() async throws {
+        state = .connecting
+        stateContinuation?.yield(.connecting)
+
+        do {
+            let sshAuth = try buildAuthMethod()
+
+            let client = try await SSHClient.connect(
+                host: host,
+                port: port,
+                authenticationMethod: sshAuth,
+                hostKeyValidator: .acceptAnything(),
+                reconnect: .never
+            )
+
+            self.sshClient = client
+            state = .connected
+            stateContinuation?.yield(.connected)
+
+            logger.info("SSH connected to \(host):\(port)")
+        } catch is SSHConnectionError {
+            throw SSHConnectionError.connectionFailed("Cannot connect to \(host):\(port)")
+        } catch {
+            let sshError = SSHConnectionError.connectionFailed("Cannot connect to \(host):\(port)")
+            state = .failed(sshError)
+            stateContinuation?.yield(.failed(sshError))
+            throw sshError
+        }
+    }
+
+    private func buildAuthMethod() throws -> SSHAuthenticationMethod {
+        switch authMethod {
+        case .password(let securePassword):
+            let passwordString = String(bytes: Array(securePassword), encoding: .utf8) ?? ""
+            return .passwordBased(username: username, password: passwordString)
+
+        case .key(let path, let passphrase):
+            let expandedPath = (path as NSString).expandingTildeInPath
+            let keyURL = URL(fileURLWithPath: expandedPath)
+            guard let keyData = try? Data(contentsOf: keyURL),
+                  let keyString = String(data: keyData, encoding: .utf8) else {
+                throw SSHConnectionError.authenticationFailed("Cannot read key file at \(path)")
+            }
+
+            // Derive passphrase data for encrypted keys
+            let decryptionKey: Data?
+            if let passphrase = passphrase, passphrase.count > 0 {
+                let passphraseBytes = Array(passphrase)
+                decryptionKey = Data(passphraseBytes)
+            } else {
+                decryptionKey = nil
+            }
+
+            // Detect key type using Citadel's SSHKeyDetection
+            do {
+                let keyType = try Citadel.SSHKeyDetection.detectPrivateKeyType(from: keyString)
+
+                switch keyType {
+                case .ed25519:
+                    let privateKey = try Curve25519.Signing.PrivateKey(
+                        sshEd25519: keyData,
+                        decryptionKey: decryptionKey
+                    )
+                    return .ed25519(username: username, privateKey: privateKey)
+
+                case .rsa:
+                    let privateKey = try Insecure.RSA.PrivateKey(
+                        sshRsa: keyData,
+                        decryptionKey: decryptionKey
+                    )
+                    return .rsa(username: username, privateKey: privateKey)
+
+                default:
+                    // For ECDSA P-256/P-384/P-521 or others, fall back to password
+                    logger.warning("Unsupported key type \(keyType) at \(path), falling back to password auth")
+                    let pwd = decryptionKey.flatMap { String(data: $0, encoding: .utf8) } ?? ""
+                    return .passwordBased(username: username, password: pwd)
+                }
+            } catch {
+                logger.warning("Failed to parse SSH key at \(path): \(error), falling back to password auth")
+                let pwd = decryptionKey.flatMap { String(data: $0, encoding: .utf8) } ?? ""
+                return .passwordBased(username: username, password: pwd)
+            }
+        }
+    }
+
+    public func disconnect() async {
+        let clientToClose = sshClient
+        sshClient = nil
+        do {
+            try await clientToClose?.close()
+        } catch {
+            logger.warning("Error closing SSH connection: \(error)")
+        }
+        state = .disconnected
+        stateContinuation?.yield(.disconnected)
+    }
+
+    public func send(_ data: Data) async throws {
+        guard case .connected = state else {
+            throw SSHConnectionError.connectionFailed("Not connected")
+        }
+    }
+
+    /// Execute a command on the remote server
+    public func executeCommand(_ command: String) async throws -> Data {
+        guard let client = sshClient else {
+            throw SSHConnectionError.notConnected
+        }
+
+        let clientRef = client
+        let output = try await clientRef.executeCommand(command)
+        let data = Data(output.readableBytesView)
+        outputContinuation?.yield(data)
+        return data
+    }
+}

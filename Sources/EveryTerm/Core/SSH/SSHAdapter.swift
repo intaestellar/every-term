@@ -188,6 +188,14 @@ public actor SSHAdapter: RemoteConnection {
         _ = buffer // suppress unused warning
     }
 
+    /// Open an SFTP subsystem channel on the existing SSH connection.
+    public func openSFTPClient() async throws -> SFTPClient {
+        guard case .connected = state, let client = sshClient else {
+            throw SSHConnectionError.notConnected
+        }
+        return try await client.openSFTP()
+    }
+
     /// Execute a command on the remote server
     public func executeCommand(_ command: String) async throws -> Data {
         guard let client = sshClient else {

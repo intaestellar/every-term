@@ -33,16 +33,12 @@ public actor TunnelManager {
     private var reconnecting: Set<UUID> = []
 
     private var statusContinuation: AsyncStream<TunnelStatus>.Continuation?
-    private var _statusStream: AsyncStream<TunnelStatus>?
+    public let statusStream: AsyncStream<TunnelStatus>
 
     public init() {
         let (stream, continuation) = AsyncStream<TunnelStatus>.makeStream()
-        self._statusStream = stream
+        self.statusStream = stream
         self.statusContinuation = continuation
-    }
-
-    public var statusStream: AsyncStream<TunnelStatus> {
-        _statusStream!
     }
 
     public var activeTunnelCount: Int {

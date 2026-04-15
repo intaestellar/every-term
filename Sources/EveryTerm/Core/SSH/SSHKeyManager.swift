@@ -123,7 +123,10 @@ public struct SSHKeyManager: Sendable {
 
         let passphraseStr: String
         if let passphrase = passphrase, passphrase.count > 0 {
-            passphraseStr = String(bytes: Array(passphrase), encoding: .utf8) ?? ""
+            guard let decoded = String(bytes: Array(passphrase), encoding: .utf8) else {
+                throw SSHKeyError.generationFailed("Passphrase contains invalid UTF-8 bytes")
+            }
+            passphraseStr = decoded
         } else {
             passphraseStr = ""
         }

@@ -16,9 +16,26 @@ public struct PortConflictError: Error, Sendable {
 
 /// Mock SSH tunnel channel for testing purposes
 public final class MockTunnelChannel: @unchecked Sendable {
-    public var echoMode: Bool = false
-    public var isForwardRequested: Bool = false
-    public var shouldFailReconnect: Bool = false
+    private let lock = NSLock()
+
+    private var _echoMode: Bool = false
+    private var _isForwardRequested: Bool = false
+    private var _shouldFailReconnect: Bool = false
+
+    public var echoMode: Bool {
+        get { lock.withLock { _echoMode } }
+        set { lock.withLock { _echoMode = newValue } }
+    }
+
+    public var isForwardRequested: Bool {
+        get { lock.withLock { _isForwardRequested } }
+        set { lock.withLock { _isForwardRequested = newValue } }
+    }
+
+    public var shouldFailReconnect: Bool {
+        get { lock.withLock { _shouldFailReconnect } }
+        set { lock.withLock { _shouldFailReconnect = newValue } }
+    }
 
     public init() {}
 

@@ -13,17 +13,13 @@ public actor MultiExecutionManager {
     public private(set) var executionHistory: [ExecutionRecord] = []
 
     private var outputContinuation: AsyncStream<(UUID, Data)>.Continuation?
-    private var _outputStream: AsyncStream<(UUID, Data)>?
+    public let outputStream: AsyncStream<(UUID, Data)>
     private var monitorTasks: [UUID: Task<Void, Never>] = [:]
 
     public init() {
         let (stream, continuation) = AsyncStream<(UUID, Data)>.makeStream()
-        self._outputStream = stream
+        self.outputStream = stream
         self.outputContinuation = continuation
-    }
-
-    public var outputStream: AsyncStream<(UUID, Data)> {
-        _outputStream!
     }
 
     public func addTarget(_ sessionId: UUID) {

@@ -5,13 +5,24 @@ import Foundation
 /// Citadel-based SFTP adapter that wraps SSHAdapter for SFTP operations.
 public actor CitadelSFTPAdapter: SFTPConnection {
     private let sshAdapter: SSHAdapter
+    private var cachedSFTPClient: SFTPClient?
 
     public init(sshAdapter: SSHAdapter) {
         self.sshAdapter = sshAdapter
     }
 
+    /// Returns a cached SFTPClient, opening a new one if necessary.
+    private func ensureSFTPClient() async throws -> SFTPClient {
+        if let client = cachedSFTPClient {
+            return client
+        }
+        let client = try await sshAdapter.openSFTPClient()
+        cachedSFTPClient = client
+        return client
+    }
+
     public func listDirectory(_ path: String) async throws -> [SFTPFileEntry] {
-        let sftpClient = try await sshAdapter.openSFTPClient()
+        let sftpClient = try await ensureSFTPClient()
         let nameMessages = try await sftpClient.listDirectory(atPath: path)
 
         var entries: [SFTPFileEntry] = []
@@ -51,7 +62,7 @@ public actor CitadelSFTPAdapter: SFTPConnection {
     }
 
     public func stat(_ path: String) async throws -> SFTPFileEntry {
-        let sftpClient = try await sshAdapter.openSFTPClient()
+        let sftpClient = try await ensureSFTPClient()
         let attrs = try await sftpClient.getAttributes(at: path)
         let name = (path as NSString).lastPathComponent
         let perms = attrs.permissions ?? 0
@@ -80,12 +91,12 @@ public actor CitadelSFTPAdapter: SFTPConnection {
     }
 
     public func createDirectory(_ path: String) async throws {
-        let sftpClient = try await sshAdapter.openSFTPClient()
+        let sftpClient = try await ensureSFTPClient()
         try await sftpClient.createDirectory(atPath: path)
     }
 
     public func removeItem(at path: String, isDirectory: Bool) async throws {
-        let sftpClient = try await sshAdapter.openSFTPClient()
+        let sftpClient = try await ensureSFTPClient()
         if isDirectory {
             try await sftpClient.rmdir(at: path)
         } else {
@@ -94,31 +105,31 @@ public actor CitadelSFTPAdapter: SFTPConnection {
     }
 
     public func rename(from: String, to: String) async throws {
-        let sftpClient = try await sshAdapter.openSFTPClient()
+        let sftpClient = try await ensureSFTPClient()
         try await sftpClient.rename(at: from, to: to)
     }
 
     public func download(remotePath: String, progress: (@Sendable (Int64, Int64) -> Void)?) async throws -> Data {
-        let sftpClient = try await sshAdapter.openSFTPClient()
+        let sftpClient = try await ensureSFTPClient()
         let file = try await sftpClient.openFile(filePath: remotePath, flags: .read)
+        defer { Task { try? await file.close() } }
         let buffer = try await file.readAll()
         let data = Data(buffer.readableBytesView)
         progress?(Int64(data.count), Int64(data.count))
-        try await file.close()
         return data
     }
 
     public func upload(data: Data, to remotePath: String, progress: (@Sendable (Int64, Int64) -> Void)?) async throws {
-        let sftpClient = try await sshAdapter.openSFTPClient()
+        let sftpClient = try await ensureSFTPClient()
         let file = try await sftpClient.openFile(filePath: remotePath, flags: [.write, .create, .truncate])
+        defer { Task { try? await file.close() } }
         let buffer = ByteBuffer(data: data)
         try await file.write(buffer)
         progress?(Int64(data.count), Int64(data.count))
-        try await file.close()
     }
 
     public func changePermissions(_ path: String, permissions: UInt32) async throws {
-        let sftpClient = try await sshAdapter.openSFTPClient()
+        let sftpClient = try await ensureSFTPClient()
         var attrs = SFTPFileAttributes()
         attrs.permissions = permissions
         try await sftpClient.setAttributes(at: path, to: attrs)

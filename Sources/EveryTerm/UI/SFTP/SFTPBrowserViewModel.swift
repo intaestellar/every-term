@@ -30,17 +30,19 @@ public final class SFTPBrowserViewModel: ObservableObject {
     public func navigateTo(path: String) async {
         isLoading = true
         errorMessage = nil
-        currentPath = path
+        let previousPath = currentPath
 
         do {
             // Check cache first
             if let cache = cache, let cached = await cache.get(path) {
+                currentPath = path
                 files = cached
                 isLoading = false
                 return
             }
 
             let entries = try await connection.listDirectory(path)
+            currentPath = path
             files = entries
 
             // Store in cache
@@ -49,6 +51,7 @@ public final class SFTPBrowserViewModel: ObservableObject {
             }
         } catch {
             errorMessage = error.localizedDescription
+            currentPath = previousPath
             files = []
         }
 

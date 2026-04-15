@@ -19,22 +19,15 @@ public struct SFTPDropDelegate: DropDelegate {
         let providers = info.itemProviders(for: [.fileURL])
         guard !providers.isEmpty else { return false }
 
-        var collectedURLs: [URL] = []
-        let group = DispatchGroup()
-
-        for provider in providers {
-            group.enter()
-            provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { item, _ in
-                defer { group.leave() }
-                guard let data = item as? Data,
-                      let url = URL(dataRepresentation: data, relativeTo: nil) else {
-                    return
+        Task { @MainActor in
+            var collectedURLs: [URL] = []
+            for provider in providers {
+                if let url = try? await provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) as? Data {
+                    if let fileURL = URL(dataRepresentation: url, relativeTo: nil) {
+                        collectedURLs.append(fileURL)
+                    }
                 }
-                collectedURLs.append(url)
             }
-        }
-
-        group.notify(queue: .main) {
             if !collectedURLs.isEmpty {
                 onUpload(collectedURLs)
             }

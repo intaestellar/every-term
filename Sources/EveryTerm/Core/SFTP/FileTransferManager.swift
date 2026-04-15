@@ -64,8 +64,72 @@ public actor FileTransferManager {
         self.connection = connection
     }
 
+    private var activeTransferCount: Int = 0
+
     public func enqueue(_ item: TransferItem) {
         transferQueue.append(item)
+        Task { await processQueue() }
+    }
+
+    /// Dequeue pending items and start actual transfers up to maxConcurrentTransfers.
+    private func processQueue() async {
+        while activeTransferCount < maxConcurrentTransfers {
+            guard let index = transferQueue.firstIndex(where: {
+                if case .queued = $0.state { return true }
+                return false
+            }) else { break }
+
+            let item = transferQueue[index]
+            transferQueue[index].state = .transferring(progress: 0)
+            activeTransferCount += 1
+
+            let itemId = item.id
+            Task {
+                await startTransfer(item)
+                activeTransferCount -= 1
+                // Trigger next queued item
+                await processQueue()
+                _ = itemId // suppress unused warning
+            }
+        }
+    }
+
+    /// Execute a single transfer item.
+    private func startTransfer(_ item: TransferItem) async {
+        guard let index = transferQueue.firstIndex(where: { $0.id == item.id }) else { return }
+
+        do {
+            switch item.direction {
+            case .upload:
+                let data = try Data(contentsOf: URL(fileURLWithPath: item.sourcePath))
+                try await connection.upload(data: data, to: item.destinationPath) { sent, total in
+                    Task { await self.updateProgress(id: item.id, sent: sent, total: total) }
+                }
+            case .download:
+                let data = try await connection.download(remotePath: item.sourcePath) { sent, total in
+                    Task { await self.updateProgress(id: item.id, sent: sent, total: total) }
+                }
+                try data.write(to: URL(fileURLWithPath: item.destinationPath))
+            }
+
+            if let idx = transferQueue.firstIndex(where: { $0.id == item.id }) {
+                transferQueue[idx].state = .completed
+            }
+        } catch {
+            if let idx = transferQueue.firstIndex(where: { $0.id == item.id }) {
+                // Only mark as failed if not already cancelled
+                if case .cancelled = transferQueue[idx].state { return }
+                transferQueue[idx].state = .failed(error)
+            }
+        }
+        _ = index // suppress unused warning
+    }
+
+    private func updateProgress(id: UUID, sent: Int64, total: Int64) {
+        guard let idx = transferQueue.firstIndex(where: { $0.id == id }) else { return }
+        let progress = total > 0 ? Double(sent) / Double(total) : 0
+        transferQueue[idx].state = .transferring(progress: progress)
+        transferQueue[idx].transferredBytes = sent
     }
 
     public func cancel(_ id: UUID) {
@@ -94,6 +158,7 @@ public actor FileTransferManager {
     }
 
     /// Recursively upload a local folder to a remote path.
+    /// Skips symbolic links to prevent infinite recursion from circular symlinks.
     public func uploadFolder(localPath: String, remotePath: String) async throws {
         let fm = FileManager.default
         guard fm.fileExists(atPath: localPath) else {
@@ -102,9 +167,18 @@ public actor FileTransferManager {
 
         try await connection.createDirectory(remotePath)
 
-        let contents = try fm.contentsOfDirectory(atPath: localPath)
-        for item in contents {
-            let localItem = (localPath as NSString).appendingPathComponent(item)
+        let localURL = URL(fileURLWithPath: localPath)
+        let contents = try fm.contentsOfDirectory(
+            at: localURL,
+            includingPropertiesForKeys: [.isSymbolicLinkKey],
+            options: [.skipsHiddenFiles]
+        )
+        for itemURL in contents {
+            let resourceValues = try itemURL.resourceValues(forKeys: [.isSymbolicLinkKey])
+            if resourceValues.isSymbolicLink == true { continue }
+
+            let item = itemURL.lastPathComponent
+            let localItem = itemURL.path
             let remoteItem = remotePath.hasSuffix("/") ? "\(remotePath)\(item)" : "\(remotePath)/\(item)"
 
             var isDir: ObjCBool = false

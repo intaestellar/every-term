@@ -67,5 +67,20 @@ public struct MainWindowView: View {
         )
         tabManager.addTab(tab)
         session.lastConnectedAt = Date()
+
+        // Initialize SFTP ViewModel for SSH sessions
+        if session.type == .ssh {
+            let sshAdapter = SSHAdapter(
+                host: session.host,
+                port: session.port,
+                username: session.username,
+                authMethod: session.authMethod == .key
+                    ? .key(path: session.keyPath ?? "~/.ssh/id_ed25519", passphrase: nil)
+                    : .password(SecureBytes([])),
+                keepAliveInterval: session.keepAliveInterval
+            )
+            let sftpConnection = CitadelSFTPAdapter(sshAdapter: sshAdapter)
+            sftpViewModel = SFTPBrowserViewModel(connection: sftpConnection)
+        }
     }
 }

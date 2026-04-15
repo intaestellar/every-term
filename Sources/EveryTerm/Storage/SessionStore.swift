@@ -1,16 +1,48 @@
 import Foundation
 import Combine
 
+// MARK: - SessionPersistence Protocol
+
+/// Abstraction for session persistence. Implementations can use SwiftData, JSON files, or in-memory storage.
+@MainActor
+public protocol SessionPersistence: Sendable {
+    func loadSessions() throws -> [Session]
+    func saveSessions(_ sessions: [Session]) throws
+    func loadGroups() throws -> [SessionGroup]
+    func saveGroups(_ groups: [SessionGroup]) throws
+}
+
+/// In-memory persistence for testing and initial development.
+/// SwiftData-based persistence will replace this in SP-2.
+@MainActor
+public final class InMemorySessionPersistence: SessionPersistence {
+    public init() {}
+    public func loadSessions() throws -> [Session] { [] }
+    public func saveSessions(_ sessions: [Session]) throws {}
+    public func loadGroups() throws -> [SessionGroup] { [] }
+    public func saveGroups(_ groups: [SessionGroup]) throws {}
+}
+
 @MainActor
 public final class SessionStore: ObservableObject {
     @Published public private(set) var sessionsDidChange: Int = 0
     private var sessions: [Session] = []
     private var groups: [SessionGroup] = []
+    private let persistence: any SessionPersistence
 
-    public init() {}
+    public init(persistence: any SessionPersistence = InMemorySessionPersistence()) {
+        self.persistence = persistence
+        // Load persisted sessions on init
+        if let loaded = try? persistence.loadSessions() {
+            self.sessions = loaded
+        }
+        if let loaded = try? persistence.loadGroups() {
+            self.groups = loaded
+        }
+    }
 
     public static func forTesting() -> SessionStore {
-        SessionStore()
+        SessionStore(persistence: InMemorySessionPersistence())
     }
 
     // MARK: - Session CRUD

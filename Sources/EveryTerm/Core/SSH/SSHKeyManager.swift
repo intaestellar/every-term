@@ -184,7 +184,7 @@ public struct SSHKeyManager: Sendable {
     }
 
     /// Deploy public key to a remote server's authorized_keys via SSH
-    /// Uses ssh-copy-id style approach via a Process call
+    /// Uses stdin pipe to avoid shell injection — public key content is never interpolated into shell commands.
     public func deployPublicKey(
         publicKeyPath: String,
         host: String,
@@ -197,11 +197,17 @@ public struct SSHKeyManager: Sendable {
             throw SSHKeyError.generationFailed("Public key not found at \(publicKeyPath)")
         }
 
+        // Validate hostname: only allow alphanumeric, dots, hyphens, and colons (IPv6)
+        let allowedHostChars = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: ".-:[]"))
+        guard host.unicodeScalars.allSatisfy({ allowedHostChars.contains($0) }), !host.isEmpty else {
+            throw SSHKeyError.generationFailed("Invalid hostname: \(host)")
+        }
+
         let publicKeyContent = try String(contentsOfFile: expandedPath, encoding: .utf8)
             .trimmingCharacters(in: .whitespacesAndNewlines)
 
-        // Build a command that appends the key to authorized_keys on the remote server
-        let remoteCommand = "mkdir -p ~/.ssh && chmod 700 ~/.ssh && echo '\(publicKeyContent)' >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
+        // Pass public key via stdin to avoid shell injection
+        let remoteCommand = "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
 
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/ssh")
@@ -211,11 +217,20 @@ public struct SSHKeyManager: Sendable {
             remoteCommand
         ]
 
+        // Pipe public key content via stdin instead of embedding in shell command
+        let inputPipe = Pipe()
+        process.standardInput = inputPipe
+
         let outputPipe = Pipe()
         process.standardOutput = outputPipe
         process.standardError = outputPipe
 
         try process.run()
+
+        let keyData = Data((publicKeyContent + "\n").utf8)
+        inputPipe.fileHandleForWriting.write(keyData)
+        inputPipe.fileHandleForWriting.closeFile()
+
         process.waitUntilExit()
 
         guard process.terminationStatus == 0 else {

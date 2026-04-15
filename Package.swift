@@ -32,7 +32,7 @@ let package = Package(
             ],
             path: "Sources/EveryTerm",
             swiftSettings: [
-                .unsafeFlags(["-strict-concurrency=complete"])
+                .enableExperimentalFeature("StrictConcurrency")
             ]
         ),
         .executableTarget(

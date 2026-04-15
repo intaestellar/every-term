@@ -47,7 +47,15 @@ public actor ReconnectionManager {
             } catch {
                 if attempt < maxAttempts - 1 {
                     let delay = calculateDelay(forAttempt: attempt, baseDelay: baseDelay)
-                    try? await Task.sleep(for: delay)
+                    do {
+                        try await Task.sleep(for: delay)
+                    } catch {
+                        // Task was cancelled during sleep — respect cancellation
+                        isCancelled = true
+                        return
+                    }
+                    // Check cancellation after sleep completes
+                    if isCancelled || Task.isCancelled { return }
                 }
             }
         }

@@ -47,7 +47,6 @@ public actor LocalShellAdapter: RemoteConnection {
         state = .connecting
         stateContinuation?.yield(.connecting)
 
-        var slaveFd: Int32 = 0
         var winSize = winsize(
             ws_row: currentSize.rows,
             ws_col: currentSize.columns,

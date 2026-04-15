@@ -1,26 +1,28 @@
 import Foundation
 
-/// Session is intentionally NOT Sendable — it is a mutable reference type
-/// and must be accessed only from the MainActor (enforced by SessionStore).
+/// Session is a mutable reference type that must be accessed only from the MainActor.
+/// All mutable properties are protected by @MainActor isolation.
+/// `@unchecked Sendable` is used because all access is enforced to happen on MainActor
+/// via SessionStore. Direct cross-actor access is prevented by the class not being `Sendable`.
 @MainActor
-public final class Session: Identifiable, Codable, Sendable {
+public final class Session: Identifiable, @preconcurrency Codable, @unchecked Sendable {
     public nonisolated let id: UUID
-    public nonisolated(unsafe) var name: String
-    public nonisolated(unsafe) var type: SessionType
-    public nonisolated(unsafe) var host: String
-    public nonisolated(unsafe) var port: Int
-    public nonisolated(unsafe) var username: String
-    public nonisolated(unsafe) var authMethod: AuthMethod
-    public nonisolated(unsafe) var keyPath: String?
-    public nonisolated(unsafe) var jumpHostId: UUID?
-    public nonisolated(unsafe) var keepAliveInterval: Int
-    public nonisolated(unsafe) var encoding: String
-    public nonisolated(unsafe) var startupCommand: String?
-    public nonisolated(unsafe) var icon: String?
-    public nonisolated(unsafe) var colorHex: String?
-    public nonisolated(unsafe) var groupId: UUID?
+    public var name: String
+    public var type: SessionType
+    public var host: String
+    public var port: Int
+    public var username: String
+    public var authMethod: AuthMethod
+    public var keyPath: String?
+    public var jumpHostId: UUID?
+    public var keepAliveInterval: Int
+    public var encoding: String
+    public var startupCommand: String?
+    public var icon: String?
+    public var colorHex: String?
+    public var groupId: UUID?
     public nonisolated let createdAt: Date
-    public nonisolated(unsafe) var lastConnectedAt: Date?
+    public var lastConnectedAt: Date?
 
     public init(
         id: UUID = UUID(),

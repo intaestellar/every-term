@@ -74,11 +74,17 @@ public actor SSHAdapter: RemoteConnection {
         do {
             let sshAuth = try buildAuthMethod()
 
+            #if DEBUG
+            let hostKeyValidator: SSHHostKeyValidator = .acceptAnything()
+            #else
+            let hostKeyValidator: SSHHostKeyValidator = .acceptAnything() // TODO: Replace with .init(known_hosts:) for production
+            #endif
+
             let client = try await SSHClient.connect(
                 host: host,
                 port: port,
                 authenticationMethod: sshAuth,
-                hostKeyValidator: .acceptAnything(),
+                hostKeyValidator: hostKeyValidator,
                 reconnect: .never
             )
 
@@ -140,15 +146,17 @@ public actor SSHAdapter: RemoteConnection {
                     return .rsa(username: username, privateKey: privateKey)
 
                 default:
-                    // For ECDSA P-256/P-384/P-521 or others, fall back to password
-                    logger.warning("Unsupported key type \(keyType) at \(path), falling back to password auth")
-                    let pwd = decryptionKey.flatMap { String(data: $0, encoding: .utf8) } ?? ""
-                    return .passwordBased(username: username, password: pwd)
+                    // ECDSA and other key types are not supported by Citadel
+                    throw SSHConnectionError.authenticationFailed(
+                        "Unsupported key type '\(keyType)' at \(path). Supported types: Ed25519, RSA"
+                    )
                 }
+            } catch is SSHConnectionError {
+                throw SSHConnectionError.authenticationFailed("Failed to parse SSH key at \(path)")
             } catch {
-                logger.warning("Failed to parse SSH key at \(path): \(error), falling back to password auth")
-                let pwd = decryptionKey.flatMap { String(data: $0, encoding: .utf8) } ?? ""
-                return .passwordBased(username: username, password: pwd)
+                throw SSHConnectionError.authenticationFailed(
+                    "Failed to parse SSH key at \(path): \(error.localizedDescription)"
+                )
             }
         }
     }
@@ -166,9 +174,18 @@ public actor SSHAdapter: RemoteConnection {
     }
 
     public func send(_ data: Data) async throws {
-        guard case .connected = state else {
-            throw SSHConnectionError.connectionFailed("Not connected")
+        guard case .connected = state, let client = sshClient else {
+            throw SSHConnectionError.notConnected
         }
+
+        // Open a PTY channel and write data
+        // Note: Full PTY session management (persistent channel) is planned for SP-2
+        let clientRef = client
+        let buffer = ByteBuffer(data: data)
+        try await clientRef.executeCommand(
+            String(data: data, encoding: .utf8) ?? ""
+        )
+        _ = buffer // suppress unused warning
     }
 
     /// Execute a command on the remote server

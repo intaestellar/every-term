@@ -1,7 +1,7 @@
 import Foundation
 
 public protocol RemoteConnection: Actor {
-    var id: UUID { get }
+    nonisolated var id: UUID { get }
     var state: ConnectionState { get }
     var stateStream: AsyncStream<ConnectionState> { get }
     func connect() async throws
@@ -13,7 +13,7 @@ public protocol RemoteConnection: Actor {
 // MARK: - MockRemoteConnection
 
 public actor MockRemoteConnection: RemoteConnection {
-    public let id: UUID = UUID()
+    public nonisolated let id: UUID = UUID()
     public private(set) var state: ConnectionState = .disconnected
     public private(set) var lastSentData: Data?
 

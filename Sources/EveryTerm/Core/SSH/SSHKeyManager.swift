@@ -90,6 +90,7 @@ public struct SSHKeyManager: Sendable {
 
     public func generateKey(
         type: SSHKeyType,
+        bits: Int? = nil,
         name: String,
         passphrase: SecureBytes?
     ) async throws -> SSHKeyGenerationResult {
@@ -129,11 +130,18 @@ public struct SSHKeyManager: Sendable {
 
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/ssh-keygen")
-        process.arguments = [
-            "-t", keyTypeArg,
-            "-f", privateKeyPath,
-            "-q"
-        ]
+        var args = ["-t", keyTypeArg, "-f", privateKeyPath, "-q"]
+        if let bits = bits, (type == .rsa || type == .ecdsa) {
+            let bitsValue: Int
+            if type == .ecdsa {
+                // ECDSA uses specific bit sizes
+                bitsValue = bits <= 256 ? 256 : (bits <= 384 ? 384 : 521)
+            } else {
+                bitsValue = bits
+            }
+            args += ["-b", String(bitsValue)]
+        }
+        process.arguments = args
 
         // Pass passphrase via stdin pipe instead of process arguments
         // to avoid exposing it in `ps` output
@@ -238,5 +246,14 @@ public struct SSHKeyManager: Sendable {
             let output = String(data: outputData, encoding: .utf8) ?? "Unknown error"
             throw SSHKeyError.generationFailed("Failed to deploy key: \(output)")
         }
+    }
+
+    /// Build shell command for deploying a public key to a remote server's authorized_keys
+    @available(*, deprecated, message: "Use deployPublicKey() which passes the key via stdin to avoid shell injection")
+    public func buildDeployCommand(publicKey: String) -> String {
+        let escapedKey = publicKey
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "'", with: "'\\''")
+        return "mkdir -p ~/.ssh && chmod 700 ~/.ssh && echo '\(escapedKey)' >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
     }
 }

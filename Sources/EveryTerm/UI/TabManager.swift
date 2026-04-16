@@ -89,4 +89,31 @@ public final class TabManager: ObservableObject {
         guard let id = activeTabId else { return }
         removeTab(id)
     }
+
+    // MARK: - Protocol routing
+
+    /// Route kinds understood by the main window content pane.
+    ///
+    /// Keeping this as a pure enum (no SwiftUI dependency) lets the
+    /// routing decision be unit-tested without instantiating views, and
+    /// keeps `TabManager` free of `SwiftUI` imports.
+    public enum ContentRoute: Sendable, Equatable {
+        case terminal        // SSH / Local / Telnet / Serial share the terminal surface
+        case rdp
+        case vnc
+    }
+
+    /// Decide which view kind should be rendered for a given session
+    /// type. RDP/VNC currently render placeholder surfaces; everything
+    /// else goes through the shared terminal view.
+    public static func contentRoute(for type: SessionType) -> ContentRoute {
+        switch type {
+        case .rdp:
+            return .rdp
+        case .vnc:
+            return .vnc
+        case .ssh, .local, .telnet, .serial:
+            return .terminal
+        }
+    }
 }

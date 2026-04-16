@@ -28,6 +28,12 @@ public final class SessionStore: ObservableObject {
     @Published public private(set) var sessionsDidChange: Int = 0
     private var sessions: [Session] = []
     private var groups: [SessionGroup] = []
+    // Protocol-specific configs keyed by owning `Session.id`. Persistence
+    // for these SwiftData models is deferred to the container in SP-5;
+    // keeping them in memory is sufficient for the editor round-trip.
+    private var rdpConfigs: [UUID: RDPSessionConfig] = [:]
+    private var vncConfigs: [UUID: VNCSessionConfig] = [:]
+    private var serialConfigs: [UUID: SerialSessionConfig] = [:]
     private let persistence: any SessionPersistence
 
     public init(persistence: any SessionPersistence = InMemorySessionPersistence()) {
@@ -71,7 +77,36 @@ public final class SessionStore: ObservableObject {
 
     public func delete(_ id: UUID) throws {
         sessions.removeAll(where: { $0.id == id })
+        rdpConfigs.removeValue(forKey: id)
+        vncConfigs.removeValue(forKey: id)
+        serialConfigs.removeValue(forKey: id)
         sessionsDidChange += 1
+    }
+
+    // MARK: - Protocol-specific configs
+
+    public func setRDPConfig(_ config: RDPSessionConfig, forSessionId id: UUID) {
+        rdpConfigs[id] = config
+    }
+
+    public func rdpConfig(forSessionId id: UUID) -> RDPSessionConfig? {
+        rdpConfigs[id]
+    }
+
+    public func setVNCConfig(_ config: VNCSessionConfig, forSessionId id: UUID) {
+        vncConfigs[id] = config
+    }
+
+    public func vncConfig(forSessionId id: UUID) -> VNCSessionConfig? {
+        vncConfigs[id]
+    }
+
+    public func setSerialConfig(_ config: SerialSessionConfig, forSessionId id: UUID) {
+        serialConfigs[id] = config
+    }
+
+    public func serialConfig(forSessionId id: UUID) -> SerialSessionConfig? {
+        serialConfigs[id]
     }
 
     // MARK: - Group CRUD

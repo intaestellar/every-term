@@ -23,12 +23,33 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-log.git", from: "1.5.0"),
     ],
     targets: [
+        // MARK: - FreeRDP / LibVNCClient binary targets (placeholder)
+        //
+        // The RDP and VNC adapters currently ship as stubs. Once the
+        // Scripts/build-freerdp.sh and Scripts/build-libvncclient.sh
+        // pipelines produce signed XCFrameworks and an artifact URL is
+        // available, uncomment the corresponding binaryTarget entries and
+        // add them to the EveryTerm target dependencies.
+        //
+        // .binaryTarget(
+        //     name: "FreeRDP",
+        //     url: "https://example.com/frameworks/FreeRDP-<version>.xcframework.zip",
+        //     checksum: "<sha256-hex>"
+        // ),
+        // .binaryTarget(
+        //     name: "LibVNCClient",
+        //     url: "https://example.com/frameworks/LibVNCClient-<version>.xcframework.zip",
+        //     checksum: "<sha256-hex>"
+        // ),
         .target(
             name: "EveryTerm",
             dependencies: [
                 .product(name: "Citadel", package: "Citadel"),
                 .product(name: "SwiftTerm", package: "SwiftTerm"),
                 .product(name: "Logging", package: "swift-log"),
+                // TODO: add binary targets once XCFrameworks are published:
+                // "FreeRDP",
+                // "LibVNCClient",
             ],
             path: "Sources/EveryTerm",
             swiftSettings: [

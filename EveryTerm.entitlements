@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!--
+        EveryTerm requires direct access to /dev/tty.* and /dev/cu.*
+        character devices to drive USB-Serial adapters. The macOS App
+        Sandbox blocks unmediated access to these BSD devices, so we
+        ship the application without sandboxing.
+
+        If future versions adopt the sandbox, add the
+        com.apple.security.device.serial entitlement (requires Apple
+        approval) instead of disabling app-sandbox.
+    -->
+    <key>com.apple.security.app-sandbox</key>
+    <false/>
+
+    <!-- Outbound network access for SSH/Telnet/RDP/VNC sessions. -->
+    <key>com.apple.security.network.client</key>
+    <true/>
+</dict>
+</plist>

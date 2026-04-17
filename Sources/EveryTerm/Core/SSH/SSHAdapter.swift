@@ -9,6 +9,7 @@ public enum SSHConnectionError: Error {
     case connectionFailed(String)
     case authenticationFailed(String)
     case unknownHost(String)
+    case hostKeyMismatch(expected: String, actual: String)
     case timeout
     case notConnected
 }
@@ -16,6 +17,17 @@ public enum SSHConnectionError: Error {
 public enum SSHAuthMethod: Sendable {
     case password(SecureBytes)
     case key(path: String, passphrase: SecureBytes?)
+}
+
+/// Policy controlling how `SSHAdapter` handles the remote host key.
+///
+/// - Note: Step 4-2 (host-key pinning via ``HostKeyValidator``) is not yet
+///   wired. When it lands, add a `.trustOnFirstUse(store:)` case that wraps
+///   ``HostKeyValidator`` into `SSHHostKeyValidator.custom(...)`.
+public enum SSHHostKeyPolicy: Sendable {
+    /// Blindly accept any host key. Used only in tests / debug builds where
+    /// connecting to throwaway hosts is acceptable.
+    case acceptAnything
 }
 
 public actor SSHAdapter: RemoteConnection {
@@ -27,6 +39,7 @@ public actor SSHAdapter: RemoteConnection {
     private let username: String
     private let authMethod: SSHAuthMethod
     private let keepAliveInterval: Int
+    private let hostKeyPolicy: SSHHostKeyPolicy
 
     private var sshClient: SSHClient?
 
@@ -42,13 +55,15 @@ public actor SSHAdapter: RemoteConnection {
         port: Int,
         username: String,
         authMethod: SSHAuthMethod,
-        keepAliveInterval: Int = 60
+        keepAliveInterval: Int = 60,
+        hostKeyPolicy: SSHHostKeyPolicy = .acceptAnything
     ) {
         self.host = host
         self.port = port
         self.username = username
         self.authMethod = authMethod
         self.keepAliveInterval = keepAliveInterval
+        self.hostKeyPolicy = hostKeyPolicy
 
         let (stateStream, stateCont) = AsyncStream<ConnectionState>.makeStream()
         self._stateStream = stateStream
@@ -74,11 +89,10 @@ public actor SSHAdapter: RemoteConnection {
         do {
             let sshAuth = try buildAuthMethod()
 
-            #if DEBUG
+            // TODO: Step 4-2 — Wire HostKeyValidator (TOFU) into
+            // SSHHostKeyValidator.custom(...) once SwiftData-backed
+            // KnownHostStore lands. See HostKeyValidator.swift.
             let hostKeyValidator: SSHHostKeyValidator = .acceptAnything()
-            #else
-            let hostKeyValidator: SSHHostKeyValidator = .acceptAnything() // TODO: Replace with .init(known_hosts:) for production
-            #endif
 
             let client = try await SSHClient.connect(
                 host: host,

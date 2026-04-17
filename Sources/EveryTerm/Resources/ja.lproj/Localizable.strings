@@ -1,0 +1,27 @@
+/* EveryTerm — Japanese strings */
+"welcome.title" = "EveryTerm へようこそ";
+"welcome.subtitle" = "1 つのアプリで SSH · SFTP · RDP · VNC · Telnet · Serial";
+"welcome.cta.new" = "新しいセッションを作成";
+"welcome.cta.import" = "SSH 設定をインポート";
+"welcome.recent" = "最近のセッション";
+"welcome.empty" = "最近のセッションはありません";
+
+"command_palette.placeholder" = "セッションやコマンドを検索";
+"command_palette.title" = "コマンドパレット";
+
+"menubar.connected" = "接続中のセッション: %d";
+"menubar.empty" = "最近のセッションなし";
+"menubar.quit" = "EveryTerm を終了";
+
+"warning.telnet.title" = "暗号化されていない Telnet 接続";
+"warning.vnc.title" = "暗号化されていない VNC 接続";
+"warning.generic.title" = "暗号化されていない接続";
+"warning.message" = "このプロトコルは認証情報とセッションデータを平文で送信します。";
+"warning.proceed" = "理解して続行";
+"warning.cancel" = "キャンセル";
+"warning.dont_show_again" = "このセッションでは今後表示しない";
+
+"action.connect" = "接続";
+"action.disconnect" = "切断";
+"action.close_tab" = "タブを閉じる";
+"action.new_session" = "新しいセッション";

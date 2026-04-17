@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0"
+     xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"
+     xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <channel>
+        <title>EveryTerm</title>
+        <link>https://everyterm.github.io/appcast.xml</link>
+        <description>EveryTerm release appcast</description>
+        <language>en</language>
+
+        <!--
+            Empty channel. Scripts/generate-appcast.sh replaces this file
+            with the real feed produced by Sparkle's `generate_appcast`
+            tool when a new release is tagged.
+        -->
+    </channel>
+</rss>

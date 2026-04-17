@@ -18,5 +18,9 @@
     <!-- Outbound network access for SSH/Telnet/RDP/VNC sessions. -->
     <key>com.apple.security.network.client</key>
     <true/>
+
+    <!-- Enable Hardened Runtime (required for notarization). -->
+    <key>com.apple.security.hardened-runtime</key>
+    <true/>
 </dict>
 </plist>

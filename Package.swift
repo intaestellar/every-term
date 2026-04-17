@@ -4,6 +4,7 @@ import PackageDescription
 
 let package = Package(
     name: "EveryTerm",
+    defaultLocalization: "en",
     platforms: [
         .macOS(.v14)
     ],
@@ -21,6 +22,10 @@ let package = Package(
         .package(url: "https://github.com/orlandos-nl/Citadel.git", from: "0.7.0"),
         .package(url: "https://github.com/migueldeicaza/SwiftTerm.git", from: "1.2.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.5.0"),
+        // Sparkle auto-update. Kept commented so the SPM package resolves
+        // offline; uncomment together with the matching product dependency
+        // on `EveryTermApp` once the release signing pipeline is ready.
+        // .package(url: "https://github.com/sparkle-project/Sparkle.git", from: "2.6.0"),
     ],
     targets: [
         // MARK: - FreeRDP / LibVNCClient binary targets (placeholder)
@@ -64,7 +69,10 @@ let package = Package(
         .testTarget(
             name: "EveryTermTests",
             dependencies: ["EveryTerm"],
-            path: "Tests/EveryTermTests"
+            path: "Tests/EveryTermTests",
+            resources: [
+                .copy("Resources/Dracula.itermcolors")
+            ]
         )
     ]
 )

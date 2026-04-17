@@ -1,0 +1,42 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Swift test
+        run: swift test --parallel
+
+      - name: Build & codesign (dry-run without secrets)
+        env:
+          DRY_RUN: ${{ vars.RELEASE_DRY_RUN || '1' }}
+        run: |
+          bash Scripts/sign.sh --dry-run
+          bash Scripts/create-dmg.sh --dry-run
+
+      - name: Notarize DMG (notarytool)
+        env:
+          DRY_RUN: ${{ vars.RELEASE_DRY_RUN || '1' }}
+        run: bash Scripts/notarize.sh --dry-run
+
+      - name: Generate Sparkle appcast
+        env:
+          DRY_RUN: ${{ vars.RELEASE_DRY_RUN || '1' }}
+        run: bash Scripts/generate-appcast.sh --dry-run
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

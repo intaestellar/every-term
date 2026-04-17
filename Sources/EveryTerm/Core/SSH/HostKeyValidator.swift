@@ -53,17 +53,12 @@ public final class InMemoryKnownHostStore: KnownHostStore {
 /// TOFU (trust-on-first-use) style host key validator. Records unknown hosts
 /// on first contact; flags fingerprint mismatches as `.mismatch`.
 ///
-/// This is the model-level policy. Wiring the decision into the Citadel
-/// `SSHHostKeyValidator` callback is the responsibility of `SSHAdapter`.
+/// This is the model-level policy. ``SSHAdapter`` wires the decision into
+/// the Citadel `SSHHostKeyValidator.custom(...)` callback via
+/// ``TOFUHostKeyDelegate`` when `hostKeyPolicy` is `.trustOnFirstUse`.
 ///
-/// - Important: **Step 4-2 미완** — 이 타입과 ``KnownHost``,
-///   ``InMemoryKnownHostStore`` 는 아직 `SSHAdapter.connect()` 에 배선되지
-///   않았습니다. Citadel `SSHHostKeyValidator.custom(...)` 콜백 안에서
-///   `evaluate(...)` 를 호출하는 어댑터 코드가 필요합니다.
-///
-/// - Note: `evaluate` uses `Date()` directly for `lastSeenAt`. When this
-///   type is wired into production (Step 4-2), inject a `DateProvider`
-///   (or `@dependency(\.date)`) so timestamps are testable.
+/// - Note: `evaluate` uses `Date()` directly for `lastSeenAt`. Inject a
+///   `DateProvider` (or `@dependency(\.date)`) for testable timestamps.
 @MainActor
 public struct HostKeyValidator: Sendable {
     public let store: any KnownHostStore

@@ -48,9 +48,8 @@ public final class AppThemeManager: ObservableObject {
     /// Remove a previously registered custom theme by name.
     public func removeCustom(named name: String) {
         customThemes.removeAll { $0.name == name }
-        if activeTheme.name == name,
-           let fallback = TerminalTheme.builtIns.first {
-            activeTheme = fallback
+        if activeTheme.name == name {
+            activeTheme = TerminalTheme.builtIns.first ?? .dracula
         }
     }
 }

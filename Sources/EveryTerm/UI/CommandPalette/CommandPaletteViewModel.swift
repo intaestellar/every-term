@@ -51,6 +51,13 @@ public final class CommandPaletteViewModel {
         onActivate?(filteredItems[selectedIndex])
     }
 
+    /// Activate the item at a specific index (e.g. from a mouse click).
+    public func activateItem(at index: Int) {
+        guard filteredItems.indices.contains(index) else { return }
+        selectedIndex = index
+        activateSelected()
+    }
+
     public func reset() {
         query = ""
         selectedIndex = 0

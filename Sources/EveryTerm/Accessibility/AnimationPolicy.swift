@@ -7,10 +7,18 @@ extension View {
     /// When reduce motion is enabled, changes happen instantly (nil animation).
     ///
     /// Usage: `myView.reduceMotionAnimation(.easeInOut(duration: 0.2))`
-    @ViewBuilder
     public func reduceMotionAnimation(
         _ animation: Animation? = .easeInOut(duration: 0.2)
     ) -> some View {
-        self.animation(animation, value: 0)
+        modifier(ReduceMotionModifier(animation: animation))
+    }
+}
+
+private struct ReduceMotionModifier: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) var reduceMotion
+    let animation: Animation?
+
+    func body(content: Content) -> some View {
+        content.animation(reduceMotion ? nil : animation, value: 0)
     }
 }

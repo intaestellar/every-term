@@ -63,14 +63,14 @@ public final class MenuBarController {
     private func buildMenu() -> NSMenu {
         let menu = NSMenu()
         menu.addItem(
-            withTitle: "연결된 세션: \(viewModel.connectedSessionCount)",
+            withTitle: String(localized: "연결된 세션: \(viewModel.connectedSessionCount)"),
             action: nil,
             keyEquivalent: ""
         )
         menu.addItem(.separator())
 
         if viewModel.quickConnectItems.isEmpty {
-            let empty = NSMenuItem(title: "최근 세션 없음", action: nil, keyEquivalent: "")
+            let empty = NSMenuItem(title: String(localized: "최근 세션 없음"), action: nil, keyEquivalent: "")
             empty.isEnabled = false
             menu.addItem(empty)
         } else {
@@ -87,7 +87,7 @@ public final class MenuBarController {
         }
 
         menu.addItem(.separator())
-        let quit = NSMenuItem(title: "EveryTerm 종료", action: #selector(handleQuit), keyEquivalent: "q")
+        let quit = NSMenuItem(title: String(localized: "EveryTerm 종료"), action: #selector(handleQuit), keyEquivalent: "q")
         quit.target = self
         menu.addItem(quit)
         return menu

@@ -39,7 +39,7 @@ public struct CommandPaletteView: View {
         HStack {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(.secondary)
-            TextField("세션 또는 명령 검색", text: Binding(
+            TextField(String(localized: "세션 또는 명령 검색"), text: Binding(
                 get: { query },
                 set: { newValue in
                     query = newValue
@@ -48,7 +48,7 @@ public struct CommandPaletteView: View {
             ))
             .textFieldStyle(.plain)
             .font(.title3)
-            .accessibilityLabel("검색")
+            .accessibilityLabel(String(localized: "검색"))
 
             if !query.isEmpty {
                 Button {
@@ -59,7 +59,7 @@ public struct CommandPaletteView: View {
                         .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("검색어 지우기")
+                .accessibilityLabel(String(localized: "검색어 지우기"))
             }
         }
         .padding(12)
@@ -93,7 +93,7 @@ public struct CommandPaletteView: View {
                         : Color.clear
                 )
                 .onTapGesture {
-                    viewModel.activateSelected()
+                    viewModel.activateItem(at: index)
                     onDismiss?()
                 }
                 .accessibilityLabel(item.title)

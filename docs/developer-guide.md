@@ -37,7 +37,7 @@ swift test --filter CommandPaletteFuzzyFilterTests
 
 ## Host Key Pinning
 
-`Core/SSH/HostKeyValidator.swift` 는 TOFU (Trust-On-First-Use) 정책을 구현합니다. `SSHAdapter` 는 `hostKeyPolicy` 파라미터로 정책을 주입받아 `KnownHost` 모델에 지문을 기록하고, 재접속 시 불일치하면 `SSHConnectionError.hostKeyMismatch` 를 발생시킵니다.
+`Core/SSH/HostKeyValidator.swift` 는 TOFU (Trust-On-First-Use) 정책을 구현합니다. `SSHAdapter` 는 `hostKeyPolicy` 파라미터(`.trustOnFirstUse(store:)`)로 정책을 주입받으며, 연결 시 `TOFUHostKeyDelegate` 를 통해 Citadel `SSHHostKeyValidator.custom(...)` 콜백에서 `HostKeyValidator.evaluate(...)` 를 호출합니다. 처음 접속하는 호스트는 `KnownHost` 모델에 지문을 기록하고, 재접속 시 지문이 불일치하면 `SSHConnectionError.hostKeyMismatch` 를 발생시킵니다. 테스트 등에서는 `.acceptAnything` 정책을 사용할 수 있습니다.
 
 ## 업데이트
 

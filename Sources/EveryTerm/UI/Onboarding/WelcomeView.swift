@@ -3,9 +3,8 @@ import SwiftUI
 /// First-run welcome screen. Presents the EveryTerm logo, quick-start CTAs, and
 /// a list of recent sessions pulled from `WelcomeViewModel`.
 ///
-/// - Important: **Plan Step 1-9 미완** — `Localizable.strings` 파일(4개 언어)은
-///   작성돼 있으나 소스 코드의 한국어 하드코딩이 `String(localized:)` 로 치환되지
-///   않았습니다. 국제화 활성화는 별도 PR에서 진행합니다.
+/// - Note: 사용자 표시 문자열은 `String(localized:)` 로 래핑되어 있습니다.
+///   `Localizable.strings` (4개 언어)에 대응 키를 추가하면 다국어 지원이 활성화됩니다.
 @MainActor
 public struct WelcomeView: View {
     private let viewModel: WelcomeViewModel
@@ -35,7 +34,7 @@ public struct WelcomeView: View {
         .padding(32)
         .frame(minWidth: 480, minHeight: 360)
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("EveryTerm 시작하기")
+        .accessibilityLabel(String(localized: "EveryTerm 시작하기"))
     }
 
     private var header: some View {
@@ -45,9 +44,9 @@ public struct WelcomeView: View {
                 .scaledToFit()
                 .frame(width: 64, height: 64)
                 .foregroundStyle(.tint)
-            Text("EveryTerm에 오신 것을 환영합니다")
+            Text(String(localized: "EveryTerm에 오신 것을 환영합니다"))
                 .font(.title).bold()
-            Text("하나의 앱에서 SSH · SFTP · RDP · VNC · Telnet · Serial")
+            Text(String(localized: "하나의 앱에서 SSH · SFTP · RDP · VNC · Telnet · Serial"))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
@@ -75,13 +74,13 @@ public struct WelcomeView: View {
                 Image(systemName: "clock.arrow.circlepath")
                     .font(.largeTitle)
                     .foregroundStyle(.tertiary)
-                Text("최근 세션이 없습니다")
+                Text(String(localized: "최근 세션이 없습니다"))
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, minHeight: 120)
         } else {
             VStack(alignment: .leading, spacing: 6) {
-                Text("최근 세션")
+                Text(String(localized: "최근 세션"))
                     .font(.headline)
                 ForEach(viewModel.recentSessions) { session in
                     Button {

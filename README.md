@@ -13,7 +13,7 @@ workstations, and embedded devices from the same laptop.
 - **Productivity**: command palette (Cmd+Shift+P), Spotlight indexing,
   macros, multi-exec, SSH tunnels, tabbed sessions, custom themes.
 - **Security**: SecureBytes-backed credential handling, Keychain storage,
-  Hardened Runtime, optional host key pinning for every SSH host.
+  Hardened Runtime, TOFU (trust-on-first-use) host key pinning for SSH hosts.
 - **Themes**: ten curated built-ins (Dracula, Solarized Dark, Nord, One
   Dark, Gruvbox Dark, Tokyo Night, Catppuccin Mocha, Monokai Pro, macOS
   Default Light / Dark) plus iTerm2 `.itermcolors` import and a custom

@@ -37,8 +37,8 @@ struct VNCAdapterTests {
 
     // MARK: - [보통] 스텁 계약
 
-    @Test("connect() → RemoteConnectionError.notImplemented 'LibVNCClient' 메시지 포함")
-    @MainActor func connect_throwsNotImplementedWithLibVNCClient() async {
+    @Test("connect() → RemoteConnectionError.unsupportedProtocol throw")
+    @MainActor func connect_throwsUnsupportedProtocol() async {
         let config = VNCSessionConfig(sessionId: UUID())
         let adapter = VNCAdapter(host: "vnc.example.com", config: config)
 
@@ -47,11 +47,13 @@ struct VNCAdapterTests {
             Issue.record("connect()가 throw 해야 한다")
         } catch let error as RemoteConnectionError {
             switch error {
-            case .notImplemented(let message):
-                #expect(message.contains("LibVNCClient"))
+            case .unsupportedProtocol:
+                break // 성공
+            default:
+                Issue.record(".unsupportedProtocol 이 예상되지만 \(error) 가 발생")
             }
         } catch {
-            Issue.record("RemoteConnectionError.notImplemented 가 예상되지만 \(error) 가 발생")
+            Issue.record("RemoteConnectionError.unsupportedProtocol 이 예상되지만 \(error) 가 발생")
         }
     }
 

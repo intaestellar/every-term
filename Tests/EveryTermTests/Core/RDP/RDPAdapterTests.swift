@@ -37,8 +37,8 @@ struct RDPAdapterTests {
 
     // MARK: - [보통] 스텁 계약
 
-    @Test("connect() 호출 시 RemoteConnectionError.notImplemented throw 하며 'FreeRDP' 메시지 포함")
-    @MainActor func connect_throwsNotImplementedWithFreeRDP() async {
+    @Test("connect() 호출 시 RemoteConnectionError.unsupportedProtocol throw")
+    @MainActor func connect_throwsUnsupportedProtocol() async {
         let config = RDPSessionConfig(sessionId: UUID())
         let adapter = RDPAdapter(host: "rdp.example.com", config: config)
 
@@ -47,11 +47,13 @@ struct RDPAdapterTests {
             Issue.record("connect()가 throw 해야 한다")
         } catch let error as RemoteConnectionError {
             switch error {
-            case .notImplemented(let message):
-                #expect(message.contains("FreeRDP"))
+            case .unsupportedProtocol:
+                break // 성공
+            default:
+                Issue.record(".unsupportedProtocol 이 예상되지만 \(error) 가 발생")
             }
         } catch {
-            Issue.record("RemoteConnectionError.notImplemented 가 예상되지만 \(error) 가 발생")
+            Issue.record("RemoteConnectionError.unsupportedProtocol 이 예상되지만 \(error) 가 발생")
         }
     }
 
@@ -69,6 +71,8 @@ struct RDPAdapterTests {
         switch err {
         case .notImplemented(let msg):
             #expect(msg == "hello")
+        default:
+            Issue.record("notImplemented case가 매칭되어야 한다")
         }
     }
 }

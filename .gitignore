@@ -16,5 +16,8 @@ DerivedData/
 # Run configurations
 .run/
 
+# Worktrees
+.worktrees/
+
 # macOS
 .DS_Store

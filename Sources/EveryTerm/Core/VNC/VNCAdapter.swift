@@ -36,10 +36,9 @@ public actor VNCAdapter: RemoteConnection {
         _outputStream!
     }
 
+    // MVP: RDP support is planned for v2.0
     public func connect() async throws {
-        throw RemoteConnectionError.notImplemented(
-            "VNC: LibVNCClient 통합 필요 (host=\(host):\(port), 배포 준비 단계에서 구현 예정)"
-        )
+        throw RemoteConnectionError.unsupportedProtocol
     }
 
     public func disconnect() async {

@@ -129,6 +129,11 @@ public struct SessionEditorView: View {
                             Text(type.rawValue.uppercased()).tag(type)
                         }
                     }
+                    if !sessionType.isAvailable {
+                        Text("This protocol is planned for v2.0 and is not yet available.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                     TextField("Icon (SF Symbol name)", text: $icon)
                     TextField("Color (hex)", text: $colorHex)
                 }

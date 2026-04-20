@@ -14,6 +14,7 @@ public protocol RemoteConnection: Actor {
 
 public enum RemoteConnectionError: Error, Sendable {
     case notImplemented(String)
+    case unsupportedProtocol
 }
 
 // MARK: - MockRemoteConnection

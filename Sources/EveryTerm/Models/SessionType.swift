@@ -7,6 +7,15 @@ public enum SessionType: String, CaseIterable, Codable, Sendable {
     case vnc
     case telnet
     case serial
+
+    public var isAvailable: Bool {
+        switch self {
+        case .rdp, .vnc:
+            return false
+        case .ssh, .local, .telnet, .serial:
+            return true
+        }
+    }
 }
 
 public enum AuthMethod: String, CaseIterable, Codable, Sendable {

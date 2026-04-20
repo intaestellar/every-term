@@ -19,8 +19,7 @@ public final class LiveUpdateController: UpdateControllerProtocol {
     }
 
     public init(
-        configuration: UpdateConfiguration = .default,
-        delegate: UpdateControllerProtocol? = nil
+        configuration: UpdateConfiguration = .default
     ) {
         self.configuration = configuration
         // Start with updater inactive; the host app calls
@@ -32,6 +31,7 @@ public final class LiveUpdateController: UpdateControllerProtocol {
         )
         updaterController.updater.automaticallyChecksForUpdates = configuration.automaticCheckEnabled
         updaterController.updater.updateCheckInterval = configuration.checkInterval
+        // TODO: Set SUPublicEDKey in Info.plist or pass publicEDKey to Sparkle for update signature verification
     }
 
     public func checkForUpdates() {

@@ -194,7 +194,7 @@ public struct SessionEditorView: View {
                     saveSession()
                 }
                 .keyboardShortcut(.defaultAction)
-                .disabled(name.isEmpty || host.isEmpty)
+                .disabled(name.isEmpty || host.isEmpty || !sessionType.isAvailable)
             }
             .padding()
         }

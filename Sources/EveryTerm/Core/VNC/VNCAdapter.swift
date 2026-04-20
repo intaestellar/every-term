@@ -36,7 +36,7 @@ public actor VNCAdapter: RemoteConnection {
         _outputStream!
     }
 
-    // MVP: RDP support is planned for v2.0
+    // MVP: VNC support is planned for v2.0
     public func connect() async throws {
         throw RemoteConnectionError.unsupportedProtocol
     }

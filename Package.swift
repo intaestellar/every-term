@@ -22,12 +22,10 @@ let package = Package(
         .package(url: "https://github.com/orlandos-nl/Citadel.git", from: "0.7.0"),
         .package(url: "https://github.com/migueldeicaza/SwiftTerm.git", from: "1.2.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.5.0"),
-        // Sparkle auto-update. Kept commented so the SPM package resolves
-        // offline; uncomment together with the matching product dependency
-        // on `EveryTermApp` once the release signing pipeline is ready.
-        // .package(url: "https://github.com/sparkle-project/Sparkle.git", from: "2.6.0"),
+        .package(url: "https://github.com/sparkle-project/Sparkle.git", from: "2.6.0"),
     ],
     targets: [
+        // MVP 범위 외: v2.0에서 활성화 예정
         // MARK: - FreeRDP / LibVNCClient binary targets (placeholder)
         //
         // The RDP and VNC adapters currently ship as stubs. Once the
@@ -52,6 +50,7 @@ let package = Package(
                 .product(name: "Citadel", package: "Citadel"),
                 .product(name: "SwiftTerm", package: "SwiftTerm"),
                 .product(name: "Logging", package: "swift-log"),
+                .product(name: "Sparkle", package: "Sparkle"),
                 // TODO: add binary targets once XCFrameworks are published:
                 // "FreeRDP",
                 // "LibVNCClient",
@@ -63,7 +62,10 @@ let package = Package(
         ),
         .executableTarget(
             name: "EveryTermApp",
-            dependencies: ["EveryTerm"],
+            dependencies: [
+                "EveryTerm",
+                .product(name: "Sparkle", package: "Sparkle"),
+            ],
             path: "Sources/EveryTermApp"
         ),
         .testTarget(

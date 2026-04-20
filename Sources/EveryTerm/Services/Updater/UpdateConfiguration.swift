@@ -27,7 +27,7 @@ public struct UpdateConfiguration: Sendable, Equatable, Codable {
     public static let defaultInterval: TimeInterval = 86_400
 
     public static let `default` = UpdateConfiguration(
-        feedURL: URL(string: "https://github.com/everyterm/everyterm/releases/appcast.xml")!,
+        feedURL: URL(string: "https://everyterm.example.com/appcast.xml")!,
         automaticCheckEnabled: true,
         checkInterval: defaultInterval,
         // Placeholder — the real EdDSA public key is injected by

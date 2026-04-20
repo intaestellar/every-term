@@ -1,23 +1,21 @@
 import Foundation
+import Sparkle
 
-/// Deferred update controller — Sparkle is **not yet integrated**.
+/// Sparkle-based update controller wrapping `SPUStandardUpdaterController`.
 ///
-/// Sparkle SPM dependency is commented out in ``Package.swift``; this type
-/// delegates to ``MockUpdateController`` so the menu bar / preferences
-/// window can compile against ``UpdateControllerProtocol`` today.
-///
-/// When the release-signing pipeline is ready:
-/// 1. Uncomment the Sparkle dependency in `Package.swift`.
-/// 2. Rename this class back to `SparkleUpdateController`.
-/// 3. Replace the forwarding body with `SPUStandardUpdaterController`.
+/// This is the production implementation of ``UpdateControllerProtocol``.
+/// It initialises Sparkle's standard updater with the feed URL and check
+/// interval from ``UpdateConfiguration``.
+public typealias SparkleUpdateController = LiveUpdateController
+
 @MainActor
-public final class DeferredUpdateController: UpdateControllerProtocol {
-    private let delegate: UpdateControllerProtocol
+public final class LiveUpdateController: UpdateControllerProtocol {
     public let configuration: UpdateConfiguration
+    private let updaterController: SPUStandardUpdaterController
 
     public var isAutomaticallyCheckingForUpdates: Bool {
-        get { delegate.isAutomaticallyCheckingForUpdates }
-        set { delegate.isAutomaticallyCheckingForUpdates = newValue }
+        get { updaterController.updater.automaticallyChecksForUpdates }
+        set { updaterController.updater.automaticallyChecksForUpdates = newValue }
     }
 
     public init(
@@ -25,15 +23,24 @@ public final class DeferredUpdateController: UpdateControllerProtocol {
         delegate: UpdateControllerProtocol? = nil
     ) {
         self.configuration = configuration
-        self.delegate = delegate ?? MockUpdateController(
-            isAutomaticallyCheckingForUpdates: configuration.automaticCheckEnabled
+        // Start with updater inactive; the host app calls
+        // `checkForUpdates()` or enables automatic checks explicitly.
+        self.updaterController = SPUStandardUpdaterController(
+            startingUpdater: false,
+            updaterDelegate: nil,
+            userDriverDelegate: nil
         )
+        updaterController.updater.automaticallyChecksForUpdates = configuration.automaticCheckEnabled
+        updaterController.updater.updateCheckInterval = configuration.checkInterval
     }
 
     public func checkForUpdates() {
-        delegate.checkForUpdates()
+        updaterController.checkForUpdates(nil)
     }
 }
+
+/// Kept for backward compatibility — aliases to LiveUpdateController.
+public typealias DeferredUpdateController = LiveUpdateController
 
 /// In-memory stand-in for `SPUStandardUpdaterController`. Tracks the
 /// "automatic check" toggle and counts manual invocations so tests can

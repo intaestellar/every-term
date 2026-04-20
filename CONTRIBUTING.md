@@ -37,4 +37,12 @@ audits that enforce this.
 - Add or update tests alongside new behaviour.
 - Respect the project's Code of Conduct.
 
+## Citadel & Swift 6 compatibility
+
+EveryTerm imports [Citadel](https://github.com/orlandos-nl/Citadel) with
+`@preconcurrency` because the library does not yet fully conform to Swift 6
+strict concurrency (`Sendable`). Once upstream ships complete Sendable
+annotations (tracked in Citadel's issue tracker), we will remove the
+`@preconcurrency` qualifier and any related `@unchecked Sendable` workarounds.
+
 Welcome aboard!

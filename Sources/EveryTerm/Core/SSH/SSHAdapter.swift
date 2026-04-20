@@ -1,4 +1,5 @@
 import Foundation
+// TODO: Remove @preconcurrency when Citadel fully supports Swift 6 Sendable
 @preconcurrency import Citadel
 @preconcurrency import NIO
 import NIOSSH

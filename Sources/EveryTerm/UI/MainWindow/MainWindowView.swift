@@ -24,8 +24,15 @@ public struct MainWindowView: View {
                 VStack(spacing: 0) {
                     TabBarView(tabManager: tabManager)
 
-                    // Terminal area
-                    SplitTerminalView()
+                    // Insecure-protocol warning (e.g., Telnet) rendered above the
+                    // active tab's content surface. Hidden automatically for
+                    // encrypted protocols via `SecurityWarningBanner.isInsecure`.
+                    if let type = activeSessionType {
+                        SecurityWarningBanner(sessionType: type)
+                    }
+
+                    // Active tab content: route by SessionType.
+                    activeContentView
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
 
                     // Status bar
@@ -57,6 +64,40 @@ public struct MainWindowView: View {
                         .frame(minWidth: 250, idealWidth: 300, maxWidth: 400)
                 }
             }
+        }
+    }
+
+    /// Session corresponding to the currently active tab, if any.
+    private var activeSession: Session? {
+        guard let activeId = tabManager.activeTabId,
+              let tab = tabManager.tabs.first(where: { $0.id == activeId }),
+              let sessionId = tab.sessionId else { return nil }
+        return sessionStore.session(byId: sessionId)
+    }
+
+    /// SessionType of the currently active tab, used to drive the warning
+    /// banner and content routing. Returns `nil` when no tab is selected or
+    /// the tab has no associated session (fresh/unassigned tabs).
+    private var activeSessionType: SessionType? {
+        activeSession?.type
+    }
+
+    /// Route the active tab to the appropriate content view based on its
+    /// `SessionType`. RDP/VNC render their dedicated placeholder views;
+    /// SSH/Local/Telnet/Serial share `SplitTerminalView`.
+    @ViewBuilder
+    private var activeContentView: some View {
+        if let type = activeSessionType {
+            switch TabManager.contentRoute(for: type) {
+            case .terminal:
+                SplitTerminalView()
+            case .rdp:
+                RDPView(host: activeSession?.host ?? "")
+            case .vnc:
+                VNCView(host: activeSession?.host ?? "")
+            }
+        } else {
+            SplitTerminalView()
         }
     }
 

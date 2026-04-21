@@ -200,6 +200,7 @@ public struct SessionListView: View {
             colorHex: data.colorHex
         )
         try? sessionStore.add(session)
+        applyProtocolConfig(from: data, sessionId: session.id)
     }
 
     private func updateSession(_ session: Session, with data: SessionEditorView.SessionEditorData) {
@@ -215,6 +216,37 @@ public struct SessionListView: View {
         session.startupCommand = data.startupCommand
         session.icon = data.icon
         session.colorHex = data.colorHex
+        applyProtocolConfig(from: data, sessionId: session.id)
+    }
+
+    /// Persist protocol-specific payloads (RDP/VNC/Serial) into their
+    /// respective SwiftData models keyed by `Session.id` in the store.
+    private func applyProtocolConfig(
+        from data: SessionEditorView.SessionEditorData,
+        sessionId: UUID
+    ) {
+        if let rdp = data.rdp {
+            let config = sessionStore.rdpConfig(forSessionId: sessionId)
+                ?? RDPSessionConfig(sessionId: sessionId)
+            config.gatewayHost = rdp.gatewayHost
+            config.gatewayPort = rdp.gatewayPort
+            sessionStore.setRDPConfig(config, forSessionId: sessionId)
+        }
+        if let vnc = data.vnc {
+            let existing = sessionStore.vncConfig(forSessionId: sessionId)
+            let config = existing ?? VNCSessionConfig(sessionId: sessionId)
+            config.port = vnc.port
+            config.scalingModeRaw = vnc.scalingMode.rawValue
+            sessionStore.setVNCConfig(config, forSessionId: sessionId)
+        }
+        if let serial = data.serial {
+            let existing = sessionStore.serialConfig(forSessionId: sessionId)
+            let config = existing ?? SerialSessionConfig(sessionId: sessionId)
+            config.devicePath = serial.devicePath
+            config.baudRate = serial.baudRate
+            config.parityRaw = serial.parity.rawValue
+            sessionStore.setSerialConfig(config, forSessionId: sessionId)
+        }
     }
 
     private func duplicateSession(_ session: Session) {

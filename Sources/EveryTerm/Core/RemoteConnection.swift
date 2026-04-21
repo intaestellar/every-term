@@ -10,6 +10,13 @@ public protocol RemoteConnection: Actor {
     var outputStream: AsyncStream<Data> { get }
 }
 
+// MARK: - RemoteConnectionError
+
+public enum RemoteConnectionError: Error, Sendable {
+    case notImplemented(String)
+    case unsupportedProtocol
+}
+
 // MARK: - MockRemoteConnection
 
 public actor MockRemoteConnection: RemoteConnection {

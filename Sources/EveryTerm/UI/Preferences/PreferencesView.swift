@@ -57,7 +57,7 @@ struct TerminalPreferencesView: View {
     var body: some View {
         Form {
             Picker("Theme:", selection: $selectedTheme) {
-                ForEach(TerminalTheme.builtInThemes, id: \.name) { theme in
+                ForEach(TerminalTheme.builtIns, id: \.name) { theme in
                     Text(theme.name).tag(theme.name)
                 }
             }

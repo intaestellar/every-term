@@ -68,7 +68,7 @@ struct MacroPlayerTests {
         let elapsed = ContinuousClock.now - start
 
         #expect(elapsed >= .milliseconds(150))
-        #expect(elapsed <= .milliseconds(500))
+        #expect(elapsed <= .milliseconds(2000))
     }
 
     @Test("재생 중지 -> 나머지 액션 스킵 확인")

@@ -1,0 +1,30 @@
+/* EveryTerm — English strings
+   NOTE: These keys are not yet consumed via String(localized:) in source.
+   Follow-up PR needed to replace hardcoded Korean strings with localized
+   lookups (Plan Step 1-9). */
+"welcome.title" = "Welcome to EveryTerm";
+"welcome.subtitle" = "SSH · SFTP · RDP · VNC · Telnet · Serial in one app";
+"welcome.cta.new" = "Create New Session";
+"welcome.cta.import" = "Import SSH Config";
+"welcome.recent" = "Recent Sessions";
+"welcome.empty" = "No recent sessions";
+
+"command_palette.placeholder" = "Search sessions or commands";
+"command_palette.title" = "Command Palette";
+
+"menubar.connected" = "Connected sessions: %d";
+"menubar.empty" = "No recent sessions";
+"menubar.quit" = "Quit EveryTerm";
+
+"warning.telnet.title" = "Unencrypted Telnet connection";
+"warning.vnc.title" = "Unencrypted VNC connection";
+"warning.generic.title" = "Unencrypted connection";
+"warning.message" = "This protocol sends credentials and session data in plain text.";
+"warning.proceed" = "Understand and Continue";
+"warning.cancel" = "Cancel";
+"warning.dont_show_again" = "Don’t show again for this session";
+
+"action.connect" = "Connect";
+"action.disconnect" = "Disconnect";
+"action.close_tab" = "Close Tab";
+"action.new_session" = "New Session";

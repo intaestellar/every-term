@@ -1,0 +1,27 @@
+/* EveryTerm — Simplified Chinese strings */
+"welcome.title" = "欢迎使用 EveryTerm";
+"welcome.subtitle" = "在一个应用中使用 SSH · SFTP · RDP · VNC · Telnet · Serial";
+"welcome.cta.new" = "创建新会话";
+"welcome.cta.import" = "导入 SSH 配置";
+"welcome.recent" = "最近的会话";
+"welcome.empty" = "暂无最近会话";
+
+"command_palette.placeholder" = "搜索会话或命令";
+"command_palette.title" = "命令面板";
+
+"menubar.connected" = "已连接会话：%d";
+"menubar.empty" = "无最近会话";
+"menubar.quit" = "退出 EveryTerm";
+
+"warning.telnet.title" = "未加密的 Telnet 连接";
+"warning.vnc.title" = "未加密的 VNC 连接";
+"warning.generic.title" = "未加密的连接";
+"warning.message" = "此协议以明文传输凭证和会话数据。";
+"warning.proceed" = "知道了，继续";
+"warning.cancel" = "取消";
+"warning.dont_show_again" = "此会话不再提示";
+
+"action.connect" = "连接";
+"action.disconnect" = "断开连接";
+"action.close_tab" = "关闭标签页";
+"action.new_session" = "新建会话";

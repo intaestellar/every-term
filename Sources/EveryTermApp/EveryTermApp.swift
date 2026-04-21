@@ -3,8 +3,13 @@ import EveryTerm
 
 /// App delegate for AppKit integration
 class AppDelegate: NSObject, NSApplicationDelegate {
+    private var menuBarController: MenuBarController?
+
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Configure app-level settings
+        let viewModel = MenuBarViewModel()
+        let controller = MenuBarController(viewModel: viewModel)
+        controller.install()
+        self.menuBarController = controller
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {

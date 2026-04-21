@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EveryTerm — SSH · SFTP · RDP · VNC · Telnet · Serial for macOS</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+            --bg: #0b0d10;
+            --fg: #e6e6e6;
+            --accent: #7c9cff;
+        }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+        }
+        header {
+            padding: 72px 24px 32px;
+            text-align: center;
+        }
+        header h1 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+        header p { color: #a0a8b4; max-width: 640px; margin: 0 auto; }
+        .cta {
+            display: inline-block;
+            margin-top: 24px;
+            padding: 12px 24px;
+            background: var(--accent);
+            color: #0b0d10;
+            text-decoration: none;
+            font-weight: 600;
+            border-radius: 8px;
+        }
+        section {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        section h2 { border-bottom: 1px solid #22262d; padding-bottom: 8px; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+        }
+        .card {
+            padding: 16px;
+            border: 1px solid #22262d;
+            border-radius: 8px;
+        }
+        footer {
+            padding: 32px 16px;
+            text-align: center;
+            color: #6a7180;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>EveryTerm</h1>
+        <p>SSH · SFTP · RDP · VNC · Telnet · Serial — 모든 원격 프로토콜을 하나의 macOS 네이티브 앱에서.</p>
+        <a class="cta" href="https://github.com/everyterm/everyterm/releases/latest">다운로드</a>
+    </header>
+    <section>
+        <h2>주요 기능</h2>
+        <div class="grid">
+            <div class="card"><strong>네이티브 성능</strong><p>SwiftUI + Swift Concurrency. Metal-backed terminal.</p></div>
+            <div class="card"><strong>커맨드 팔레트</strong><p><code>Cmd+Shift+P</code> 로 세션 즉시 검색.</p></div>
+            <div class="card"><strong>10개 내장 테마</strong><p>Dracula, Nord, Solarized, Catppuccin 등.</p></div>
+            <div class="card"><strong>TOFU 호스트 키</strong><p>핀닝으로 MITM 방지.</p></div>
+        </div>
+    </section>
+    <section>
+        <h2>설치</h2>
+        <pre><code>brew install --cask everyterm</code></pre>
+        <p>또는 <a href="https://github.com/everyterm/everyterm/releases">GitHub Releases</a> 에서 DMG 다운로드.</p>
+    </section>
+    <footer>
+        &copy; 2026 EveryTerm contributors · Licensed under Apache-2.0
+    </footer>
+</body>
+</html>
